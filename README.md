@@ -16,8 +16,8 @@ A web-based stock analysis tool built with Streamlit that provides real-time fin
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/stock-analysis-tool.git
-cd stock-analysis-tool
+git clone https://github.com/wanazhar/stocksentry.git
+cd stocksentry
 ```
 
 2. Install dependencies:
