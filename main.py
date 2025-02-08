@@ -253,38 +253,86 @@ elif page == 'Comparison':
             comparison_df = pd.DataFrame(comparison_data)
             st.dataframe(comparison_df)
 
-            # Create performance comparison chart
-            performance_data = {}
-            base_date = None
+            # Performance Comparison (Collapsible)
+            with st.expander("📈 Performance Comparison", expanded=False):
+                performance_data = {}
+                base_date = None
 
-            for sym in symbols:
-                if len(data[sym]) > 0:
-                    if base_date is None:
-                        base_date = data[sym].index[0]
-                    prices = data[sym]['Close']
-                    initial_price = prices.iloc[0]
-                    performance = (prices / initial_price - 1) * 100
-                    performance_data[sym] = performance
+                for sym in symbols:
+                    if len(data[sym]) > 0:
+                        if base_date is None:
+                            base_date = data[sym].index[0]
+                        prices = data[sym]['Close']
+                        initial_price = prices.iloc[0]
+                        performance = (prices / initial_price - 1) * 100
+                        performance_data[sym] = performance
 
-            # Plot performance comparison
-            fig = go.Figure()
-            for sym in symbols:
-                fig.add_trace(
-                    go.Scatter(
-                        x=performance_data[sym].index,
-                        y=performance_data[sym],
-                        name=sym,
-                        mode='lines'
+                fig = go.Figure()
+                for sym in symbols:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=performance_data[sym].index,
+                            y=performance_data[sym],
+                            name=sym,
+                            mode='lines'
+                        )
                     )
+
+                fig.update_layout(
+                    title='Relative Performance Comparison (%)',
+                    yaxis_title='Performance (%)',
+                    template='plotly_dark'
                 )
 
-            fig.update_layout(
-                title='Relative Performance Comparison (%)',
-                yaxis_title='Performance (%)',
-                template='plotly_dark'
-            )
+                st.plotly_chart(fig, use_container_width=True)
 
-            st.plotly_chart(fig, use_container_width=True)
+            # Valuation Metrics Comparison (Collapsible)
+            with st.expander("📊 Valuation Metrics", expanded=False):
+                metrics = {
+                    'P/E Ratio': 'trailingPE',
+                    'Forward P/E': 'forwardPE',
+                    'PEG Ratio': 'pegRatio',
+                    'Price/Book': 'priceToBook',
+                    'EV/EBITDA': 'enterpriseToEbitda'
+                }
+
+                for metric_name, metric_key in metrics.items():
+                    values = [info[sym].get(metric_key, 0) for sym in symbols]
+                    fig = go.Figure(data=[
+                        go.Bar(
+                            x=symbols,
+                            y=values,
+                            name=metric_name
+                        )
+                    ])
+                    fig.update_layout(
+                        title=f'{metric_name} Comparison',
+                        template='plotly_dark'
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+
+            # Growth Metrics Comparison (Collapsible)
+            with st.expander("📈 Growth Metrics", expanded=False):
+                growth_metrics = {
+                    'Revenue Growth': 'revenueGrowth',
+                    'Earnings Growth': 'earningsGrowth',
+                    'Profit Margin': 'profitMargins'
+                }
+
+                for metric_name, metric_key in growth_metrics.items():
+                    values = [info[sym].get(metric_key, 0) * 100 for sym in symbols]
+                    fig = go.Figure(data=[
+                        go.Bar(
+                            x=symbols,
+                            y=values,
+                            name=metric_name
+                        )
+                    ])
+                    fig.update_layout(
+                        title=f'{metric_name} Comparison (%)',
+                        template='plotly_dark'
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
 
         except Exception as e:
             st.error(f"Error: {str(e)}")
@@ -295,11 +343,28 @@ elif page == 'Comparison':
 elif page == 'Peer Analysis':
     st.title('Peer & Industry Analysis 🏢')
 
-    symbol = st.text_input('Enter Stock Symbol:', value='AAPL').upper()
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        symbol = st.text_input('Enter Stock Symbol:', value='AAPL').upper()
+
+    with col2:
+        include_indexes = st.checkbox('Include Market Indexes', value=True)
 
     try:
         info = get_company_info(symbol)
         peers, peer_data = get_peer_comparison(symbol)
+
+        # Add market indexes if selected
+        if include_indexes:
+            market_indexes = ['SPY', 'QQQ', 'DIA', '^GSPC', '^IXIC', '^DJI']
+            for idx in market_indexes:
+                try:
+                    idx_info = get_company_info(idx)
+                    if idx_info:
+                        peers.append(idx)
+                        peer_data[idx] = idx_info
+                except:
+                    continue
 
         if peers:
             st.subheader(f"Industry: {info.get('industry', 'N/A')}")
@@ -322,37 +387,111 @@ elif page == 'Peer Analysis':
             peer_df = pd.DataFrame(peer_metrics)
             st.dataframe(peer_df)
 
-            # Create visualization for key metrics comparison
-            metrics_to_compare = ['trailingPE', 'profitMargins', 'returnOnEquity']
-            labels = ['P/E Ratio', 'Profit Margin', 'ROE']
-
-            for metric, label in zip(metrics_to_compare, labels):
-                fig = go.Figure()
-                values = []
-                names = []
-
+            # Comparison sections (Collapsible)
+            with st.expander("📊 Performance Analysis", expanded=False):
+                # Get historical data for performance comparison
+                historical_data = {}
                 for peer in [symbol] + peers:
-                    if peer in peer_data:
-                        val = peer_data[peer].get(metric, 0)
-                        if metric in ['profitMargins', 'returnOnEquity']:
-                            val *= 100
-                        values.append(val)
-                        names.append(peer)
+                    try:
+                        df = get_stock_data(peer, '1y')
+                        if len(df) > 0:
+                            prices = df['Close']
+                            initial_price = prices.iloc[0]
+                            performance = (prices / initial_price - 1) * 100
+                            historical_data[peer] = performance
+                    except:
+                        continue
 
-                fig.add_trace(
-                    go.Bar(
-                        x=names,
-                        y=values,
-                        name=label
+                # Plot performance comparison
+                fig = go.Figure()
+                for peer, perf in historical_data.items():
+                    fig.add_trace(
+                        go.Scatter(
+                            x=perf.index,
+                            y=perf,
+                            name=peer,
+                            mode='lines'
+                        )
                     )
-                )
 
                 fig.update_layout(
-                    title=f'{label} Comparison',
+                    title='Relative Performance Comparison (%)',
+                    yaxis_title='Performance (%)',
                     template='plotly_dark'
                 )
 
                 st.plotly_chart(fig, use_container_width=True)
+
+            # Valuation Metrics Comparison
+            with st.expander("📈 Valuation Metrics", expanded=False):
+                metrics_to_compare = ['trailingPE', 'profitMargins', 'returnOnEquity']
+                labels = ['P/E Ratio', 'Profit Margin', 'ROE']
+
+                for metric, label in zip(metrics_to_compare, labels):
+                    fig = go.Figure()
+                    values = []
+                    names = []
+
+                    for peer in [symbol] + peers:
+                        if peer in peer_data:
+                            val = peer_data[peer].get(metric, 0)
+                            if metric in ['profitMargins', 'returnOnEquity']:
+                                val *= 100
+                            values.append(val)
+                            names.append(peer)
+
+                    fig.add_trace(
+                        go.Bar(
+                            x=names,
+                            y=values,
+                            name=label
+                        )
+                    )
+
+                    fig.update_layout(
+                        title=f'{label} Comparison',
+                        template='plotly_dark'
+                    )
+
+                    st.plotly_chart(fig, use_container_width=True)
+
+            # Additional Metrics
+            with st.expander("📉 Additional Metrics", expanded=False):
+                additional_metrics = {
+                    'Market Cap': ('marketCap', True),
+                    'Revenue Growth': ('revenueGrowth', True),
+                    'Forward P/E': ('forwardPE', False),
+                    'PEG Ratio': ('pegRatio', False),
+                    'Price/Book': ('priceToBook', False)
+                }
+
+                for metric_name, (metric_key, is_currency) in additional_metrics.items():
+                    values = []
+                    names = []
+
+                    for peer in [symbol] + peers:
+                        if peer in peer_data:
+                            val = peer_data[peer].get(metric_key, 0)
+                            if is_currency:
+                                val = peer_data[peer].get(metric_key, 0)
+                            values.append(val)
+                            names.append(peer)
+
+                    fig = go.Figure(data=[
+                        go.Bar(
+                            x=names,
+                            y=values,
+                            name=metric_name
+                        )
+                    ])
+
+                    fig.update_layout(
+                        title=f'{metric_name} Comparison',
+                        template='plotly_dark'
+                    )
+
+                    st.plotly_chart(fig, use_container_width=True)
+
         else:
             st.info("No peer comparison data available for this stock.")
 
