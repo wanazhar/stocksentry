@@ -3,30 +3,26 @@
     background-color: #0E1117;
 }
 
-/* Sidebar styling */
-.css-1d391kg {
-    background-color: #262730;
-}
-
-/* Metrics styling */
-.st-emotion-cache-1wivap2 {
-    background-color: #262730;
-    border-radius: 5px;
-    padding: 1rem;
-    margin: 0.5rem 0;
-}
-
-/* Input fields */
+/* Input styling */
 .stTextInput > div > div > input {
     background-color: #262730;
     color: #FAFAFA;
     border-radius: 5px;
+    padding: 0.5rem;
 }
 
 /* Select boxes */
 .stSelectbox > div > div > select {
     background-color: #262730;
     color: #FAFAFA;
+    border-radius: 5px;
+}
+
+/* Expander styling */
+.streamlit-expanderHeader {
+    background-color: #262730;
+    border-radius: 5px;
+    margin: 0.5rem 0;
 }
 
 /* Charts container */
@@ -34,7 +30,15 @@
     background-color: #262730;
     border-radius: 5px;
     padding: 1rem;
-    margin: 1rem 0;
+    margin: 0.5rem 0;
+}
+
+/* Company profile metrics */
+.st-emotion-cache-1wivap2 {
+    background-color: #262730;
+    border-radius: 5px;
+    padding: 1rem;
+    margin: 0.5rem 0;
 }
 
 /* Smooth transitions */
@@ -42,12 +46,22 @@
     transition: all 0.3s ease-in-out;
 }
 
+/* Footer styling */
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    padding: 1rem;
+    background-color: #0E1117;
+    text-align: center;
+}
+
 /* Mobile responsiveness */
 @media screen and (max-width: 768px) {
     .row-widget.stSelectbox {
         width: 100%;
     }
-    
+
     .stPlotlyChart {
         height: 300px !important;
     }

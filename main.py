@@ -16,70 +16,75 @@ st.set_page_config(
     page_title="Stock Analysis Tool",
     page_icon="📈",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # Custom CSS
 with open('styles/custom.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-# Sidebar
-st.sidebar.title('Stock Analysis Tool')
-symbol = st.sidebar.text_input('Enter Stock Symbol:', value='AAPL').upper()
-period = st.sidebar.selectbox(
-    'Select Time Period:',
-    ('1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', 'max')
-)
+# Title and Description
+st.title('Stock Analysis Tool 📈')
+
+# Input Section
+col1, col2 = st.columns([2, 1])
+with col1:
+    symbol = st.text_input('Enter Stock Symbol:', value='AAPL', help="""
+    Enter stock symbol (examples):
+    - US stocks: AAPL, GOOGL, MSFT
+    - Hong Kong: 0700.HK, 9988.HK
+    - London: BP.L, HSBA.L
+    - Tokyo: 7203.T, 6758.T
+    - Singapore: D05.SI, Z74.SI
+    """).upper()
+
+with col2:
+    period = st.selectbox(
+        'Select Time Period:',
+        ('1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', 'max')
+    )
 
 # Save user preference when inputs change
 if symbol or period:
     save_user_preference(symbol, period)
 
 try:
-    # Main content
-    col1, col2 = st.columns([2, 1])
+    # Get data
+    df = get_stock_data(symbol, period)
+    info = get_company_info(symbol)
 
-    with col1:
-        st.title(f"{symbol} Stock Analysis")
+    # Company Profile Section
+    st.subheader("Company Profile")
+    profile_col1, profile_col2 = st.columns([1, 1])
 
-        # Get stock data
-        df = get_stock_data(symbol, period)
-        info = get_company_info(symbol)
+    with profile_col1:
+        st.write(f"**Company:** {info['longName']}")
+        st.write(f"**Sector:** {info.get('sector', 'N/A')}")
+        st.write(f"**Industry:** {info.get('industry', 'N/A')}")
 
-        # Price chart
+    with profile_col2:
+        metrics = {
+            "Market Cap": info.get('marketCap', 'N/A'),
+            "P/E Ratio": info.get('trailingPE', 'N/A'),
+            "52W High/Low": f"{info.get('fiftyTwoWeekHigh', 'N/A')}/{info.get('fiftyTwoWeekLow', 'N/A')}"
+        }
+        for key, value in metrics.items():
+            st.metric(key, value)
+
+    # Charts Section (Collapsible)
+    with st.expander("📊 Price Analysis", expanded=False):
         st.plotly_chart(
             create_price_chart(df, symbol),
             use_container_width=True
         )
 
-        # Volume chart
+    with st.expander("📈 Volume Analysis", expanded=False):
         st.plotly_chart(
             create_volume_chart(df),
             use_container_width=True
         )
 
-    with col2:
-        # Company info
-        st.subheader("Company Information")
-        st.write(f"**Company:** {info['longName']}")
-        st.write(f"**Sector:** {info.get('sector', 'N/A')}")
-        st.write(f"**Industry:** {info.get('industry', 'N/A')}")
-
-        # Key metrics
-        st.subheader("Key Metrics")
-        metrics = {
-            "Market Cap": info.get('marketCap', 'N/A'),
-            "P/E Ratio": info.get('trailingPE', 'N/A'),
-            "52 Week High": info.get('fiftyTwoWeekHigh', 'N/A'),
-            "52 Week Low": info.get('fiftyTwoWeekLow', 'N/A'),
-            "Volume": info.get('volume', 'N/A'),
-            "Avg Volume": info.get('averageVolume', 'N/A')
-        }
-
-        for key, value in metrics.items():
-            st.metric(key, value)
-
-        # Financial indicators chart
+    with st.expander("📉 Financial Metrics", expanded=False):
         st.plotly_chart(
             create_metrics_chart(info),
             use_container_width=True
@@ -88,3 +93,11 @@ try:
 except Exception as e:
     st.error(f"Error: {str(e)}")
     st.info("Please check the stock symbol and try again.")
+
+# Footer
+st.markdown("""
+---
+<div style='text-align: center; color: #666;'>
+    vibecoded by wanazhar on replit
+</div>
+""", unsafe_allow_html=True)
