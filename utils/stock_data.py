@@ -3,6 +3,38 @@ import pandas as pd
 from datetime import datetime, timedelta
 from .database import get_session, StockData, UserPreference
 
+def format_number(value, symbol: str, is_currency: bool = True) -> str:
+    """
+    Format numbers with currency symbol and thousand separators
+    """
+    if not value or value == 'N/A':
+        return 'N/A'
+
+    try:
+        # Determine currency symbol based on stock market
+        currency = 'HKD' if '.HK' in symbol else \
+                  'GBP' if '.L' in symbol else \
+                  'JPY' if '.T' in symbol else \
+                  'SGD' if '.SI' in symbol else \
+                  'USD'
+
+        # Format number with thousand separators
+        if is_currency:
+            if isinstance(value, (int, float)):
+                if value >= 1_000_000_000:  # Billions
+                    return f"{currency} {value/1_000_000_000:.2f}B"
+                elif value >= 1_000_000:  # Millions
+                    return f"{currency} {value/1_000_000:.2f}M"
+                else:
+                    return f"{currency} {value:,.2f}"
+            return f"{currency} {value}"
+        else:
+            if isinstance(value, (int, float)):
+                return f"{value:,.2f}" if value % 1 != 0 else f"{value:,.0f}"
+            return str(value)
+    except:
+        return str(value)
+
 def get_stock_data(symbol: str, period: str) -> pd.DataFrame:
     """
     Fetch stock data from database cache or Yahoo Finance

@@ -1,6 +1,6 @@
 import streamlit as st
 import yfinance as yf
-from utils.stock_data import get_stock_data, get_company_info, save_user_preference
+from utils.stock_data import get_stock_data, get_company_info, save_user_preference, format_number
 from utils.visualizations import create_price_chart, create_volume_chart, create_metrics_chart
 from utils.database import init_db
 import plotly.io as pio
@@ -61,15 +61,43 @@ try:
         st.write(f"**Company:** {info['longName']}")
         st.write(f"**Sector:** {info.get('sector', 'N/A')}")
         st.write(f"**Industry:** {info.get('industry', 'N/A')}")
+        st.write(f"**Market Cap:** {format_number(info.get('marketCap'), symbol)}")
+        st.write(f"**Enterprise Value:** {format_number(info.get('enterpriseValue'), symbol)}")
 
     with profile_col2:
         metrics = {
-            "Market Cap": info.get('marketCap', 'N/A'),
-            "P/E Ratio": info.get('trailingPE', 'N/A'),
-            "52W High/Low": f"{info.get('fiftyTwoWeekHigh', 'N/A')}/{info.get('fiftyTwoWeekLow', 'N/A')}"
+            "Current Price": info.get('currentPrice', 'N/A'),
+            "Day Range": f"{format_number(info.get('dayLow'), symbol)} - {format_number(info.get('dayHigh'), symbol)}",
+            "52W Range": f"{format_number(info.get('fiftyTwoWeekLow'), symbol)} - {format_number(info.get('fiftyTwoWeekHigh'), symbol)}",
+            "Volume": format_number(info.get('volume'), symbol, False)
         }
         for key, value in metrics.items():
             st.metric(key, value)
+
+    # Trading Metrics Section
+    st.subheader("Trading Metrics")
+    trading_col1, trading_col2, trading_col3 = st.columns(3)
+
+    with trading_col1:
+        st.write("**Valuation Ratios**")
+        st.write(f"P/E Ratio: {format_number(info.get('trailingPE'), symbol, False)}")
+        st.write(f"Forward P/E: {format_number(info.get('forwardPE'), symbol, False)}")
+        st.write(f"PEG Ratio: {format_number(info.get('pegRatio'), symbol, False)}")
+        st.write(f"Price/Book: {format_number(info.get('priceToBook'), symbol, False)}")
+
+    with trading_col2:
+        st.write("**Performance**")
+        st.write(f"Beta: {format_number(info.get('beta'), symbol, False)}")
+        st.write(f"Year Change: {format_number(info.get('52WeekChange', 0) * 100, symbol, False)}%")
+        st.write(f"YTD Return: {format_number(info.get('ytdReturn', 0) * 100, symbol, False)}%")
+        st.write(f"Avg Volume: {format_number(info.get('averageVolume'), symbol, False)}")
+
+    with trading_col3:
+        st.write("**Dividends & Splits**")
+        st.write(f"Dividend Rate: {format_number(info.get('dividendRate', 0), symbol)}")
+        st.write(f"Dividend Yield: {format_number(info.get('dividendYield', 0) * 100, symbol, False)}%")
+        st.write(f"Ex-Dividend Date: {info.get('exDividendDate', 'N/A')}")
+        st.write(f"Last Split: {info.get('lastSplitDate', 'N/A')}")
 
     # Charts Section (Collapsible)
     with st.expander("📊 Price Analysis", expanded=False):
