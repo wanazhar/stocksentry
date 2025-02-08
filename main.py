@@ -65,14 +65,11 @@ try:
         st.write(f"**Enterprise Value:** {format_number(info.get('enterpriseValue'), symbol)}")
 
     with profile_col2:
-        metrics = {
-            "Current Price": info.get('currentPrice', 'N/A'),
-            "Day Range": f"{format_number(info.get('dayLow'), symbol)} - {format_number(info.get('dayHigh'), symbol)}",
-            "52W Range": f"{format_number(info.get('fiftyTwoWeekLow'), symbol)} - {format_number(info.get('fiftyTwoWeekHigh'), symbol)}",
-            "Volume": format_number(info.get('volume'), symbol, False)
-        }
-        for key, value in metrics.items():
-            st.metric(key, value)
+        st.write("**Current Trading Info**")
+        st.write(f"Price: {format_number(info.get('currentPrice'), symbol)}")
+        st.write(f"Day Range: {format_number(info.get('dayLow'), symbol)} - {format_number(info.get('dayHigh'), symbol)}")
+        st.write(f"52W Range: {format_number(info.get('fiftyTwoWeekLow'), symbol)} - {format_number(info.get('fiftyTwoWeekHigh'), symbol)}")
+        st.write(f"Volume: {format_number(info.get('volume'), symbol, False)}")
 
     # Trading Metrics Section
     st.subheader("Trading Metrics")
