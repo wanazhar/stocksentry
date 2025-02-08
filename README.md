@@ -1,4 +1,4 @@
-# Stock Analysis Tool 📈
+# StockSentry 📈
 
 A web-based stock analysis tool built with Streamlit that provides real-time financial insights and interactive visualizations for stock market data.
 
