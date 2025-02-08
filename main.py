@@ -4,6 +4,10 @@ from utils.stock_data import get_stock_data, get_company_info, save_user_prefere
 from utils.visualizations import create_price_chart, create_volume_chart, create_metrics_chart
 from utils.database import init_db
 import plotly.io as pio
+from utils.data_export import export_to_excel, get_historical_data, get_peer_comparison
+import datetime
+import io
+import pandas as pd
 
 # Initialize database
 init_db()
@@ -31,7 +35,7 @@ and advanced visualizations to make informed investment decisions.
 """)
 
 # Input Section
-col1, col2 = st.columns([2, 1])
+col1, col2, col3 = st.columns([2, 1, 1])
 with col1:
     symbol = st.text_input('Enter Stock Symbol:', value='AAPL', help="""
     Enter stock symbol (examples):
@@ -48,14 +52,61 @@ with col2:
         ('1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', 'max')
     )
 
-# Save user preference when inputs change
-if symbol or period:
-    save_user_preference(symbol, period)
+with col3:
+    st.write("**Custom Date Range**")
+    use_date_range = st.checkbox("Use Date Range")
+
+# Date Range Selector (shown only if checkbox is selected)
+if use_date_range:
+    date_col1, date_col2 = st.columns(2)
+    with date_col1:
+        start_date = st.date_input(
+            "Start Date",
+            datetime.date(2010, 1, 1)
+        )
+    with date_col2:
+        end_date = st.date_input(
+            "End Date",
+            datetime.date.today()
+        )
+
+    # Bulk Analysis Option
+    st.write("**Bulk Analysis**")
+    additional_symbols = st.text_area(
+        "Enter additional symbols (one per line):",
+        help="Enter multiple stock symbols for bulk analysis"
+    )
+
+    if st.button("Download Historical Data"):
+        symbols = [symbol] + [s.strip() for s in additional_symbols.split('\n') if s.strip()]
+        historical_data = get_historical_data(symbols, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
+
+        # Create Excel file with multiple sheets
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            for sym, data in historical_data.items():
+                data.to_excel(writer, sheet_name=sym[:31])  # Excel sheet names limited to 31 chars
+
+        output.seek(0)
+        st.download_button(
+            label="📥 Download Excel File",
+            data=output,
+            file_name=f"historical_data_{start_date}_{end_date}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
 try:
-    # Get data
-    df = get_stock_data(symbol, period)
+    # Get data based on selected time range
+    if use_date_range:
+        df = get_stock_data(symbol, 'max')
+        df = df[start_date.strftime('%Y-%m-%d'):end_date.strftime('%Y-%m-%d')]
+    else:
+        df = get_stock_data(symbol, period)
+
     info = get_company_info(symbol)
+
+    # Store charts for export
+    charts = []
 
     # Company Profile Section
     st.subheader("Company Profile")
@@ -128,21 +179,29 @@ try:
 
     # Charts Section (Collapsible)
     with st.expander("📊 Price Analysis", expanded=False):
-        st.plotly_chart(
-            create_price_chart(df, symbol),
-            use_container_width=True
-        )
+        price_chart = create_price_chart(df, symbol)
+        st.plotly_chart(price_chart, use_container_width=True)
+        charts.append(price_chart)
 
     with st.expander("📈 Volume Analysis", expanded=False):
-        st.plotly_chart(
-            create_volume_chart(df),
-            use_container_width=True
-        )
+        volume_chart = create_volume_chart(df)
+        st.plotly_chart(volume_chart, use_container_width=True)
+        charts.append(volume_chart)
 
     with st.expander("📉 Financial Metrics", expanded=False):
-        st.plotly_chart(
-            create_metrics_chart(info),
-            use_container_width=True
+        metrics_chart = create_metrics_chart(info)
+        st.plotly_chart(metrics_chart, use_container_width=True)
+        charts.append(metrics_chart)
+
+    # Export Section
+    st.subheader("Export Data")
+    if st.button("Generate Excel Report"):
+        excel_file = export_to_excel(symbol, df, info, charts)
+        st.download_button(
+            label="📥 Download Excel Report",
+            data=excel_file,
+            file_name=f"{symbol}_analysis_report.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
 except Exception as e:
