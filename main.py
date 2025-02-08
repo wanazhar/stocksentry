@@ -13,8 +13,8 @@ pio.templates.default = "plotly_dark"
 
 # Page config
 st.set_page_config(
-    page_title="Stock Analysis Tool",
-    page_icon="📈",
+    page_title="StockSentry",
+    page_icon="🎯",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -24,7 +24,11 @@ with open('styles/custom.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 # Title and Description
-st.title('Stock Analysis Tool 📈')
+st.title('StockSentry 🎯')
+st.markdown("""
+Your comprehensive stock analysis companion. Get real-time insights, detailed metrics, 
+and advanced visualizations to make informed investment decisions.
+""")
 
 # Input Section
 col1, col2 = st.columns([2, 1])
@@ -76,25 +80,51 @@ try:
     trading_col1, trading_col2, trading_col3 = st.columns(3)
 
     with trading_col1:
-        st.write("**Valuation Ratios**")
+        st.write("**Valuation Metrics**")
         st.write(f"P/E Ratio: {format_number(info.get('trailingPE'), symbol, False)}")
         st.write(f"Forward P/E: {format_number(info.get('forwardPE'), symbol, False)}")
         st.write(f"PEG Ratio: {format_number(info.get('pegRatio'), symbol, False)}")
         st.write(f"Price/Book: {format_number(info.get('priceToBook'), symbol, False)}")
+        st.write(f"EV/EBITDA: {format_number(info.get('enterpriseToEbitda'), symbol, False)}")
+        st.write(f"EV/Revenue: {format_number(info.get('enterpriseToRevenue'), symbol, False)}")
 
     with trading_col2:
-        st.write("**Performance**")
+        st.write("**Growth & Performance**")
         st.write(f"Beta: {format_number(info.get('beta'), symbol, False)}")
         st.write(f"Year Change: {format_number(info.get('52WeekChange', 0) * 100, symbol, False)}%")
         st.write(f"YTD Return: {format_number(info.get('ytdReturn', 0) * 100, symbol, False)}%")
-        st.write(f"Avg Volume: {format_number(info.get('averageVolume'), symbol, False)}")
+        st.write(f"Revenue Growth: {format_number(info.get('revenueGrowth', 0) * 100, symbol, False)}%")
+        st.write(f"Earnings Growth: {format_number(info.get('earningsGrowth', 0) * 100, symbol, False)}%")
+        st.write(f"Profit Margin: {format_number(info.get('profitMargins', 0) * 100, symbol, False)}%")
 
     with trading_col3:
-        st.write("**Dividends & Splits**")
+        st.write("**Income & Returns**")
         st.write(f"Dividend Rate: {format_number(info.get('dividendRate', 0), symbol)}")
         st.write(f"Dividend Yield: {format_number(info.get('dividendYield', 0) * 100, symbol, False)}%")
-        st.write(f"Ex-Dividend Date: {info.get('exDividendDate', 'N/A')}")
-        st.write(f"Last Split: {info.get('lastSplitDate', 'N/A')}")
+        st.write(f"ROE: {format_number(info.get('returnOnEquity', 0) * 100, symbol, False)}%")
+        st.write(f"ROA: {format_number(info.get('returnOnAssets', 0) * 100, symbol, False)}%")
+        st.write(f"Operating Margin: {format_number(info.get('operatingMargins', 0) * 100, symbol, False)}%")
+        st.write(f"Gross Margin: {format_number(info.get('grossMargins', 0) * 100, symbol, False)}%")
+
+    # Financial Health Section
+    st.subheader("Financial Health")
+    health_col1, health_col2 = st.columns(2)
+
+    with health_col1:
+        st.write("**Balance Sheet Metrics**")
+        st.write(f"Total Cash: {format_number(info.get('totalCash'), symbol)}")
+        st.write(f"Total Debt: {format_number(info.get('totalDebt'), symbol)}")
+        st.write(f"Quick Ratio: {format_number(info.get('quickRatio'), symbol, False)}")
+        st.write(f"Current Ratio: {format_number(info.get('currentRatio'), symbol, False)}")
+        st.write(f"Debt/Equity: {format_number(info.get('debtToEquity'), symbol, False)}")
+
+    with health_col2:
+        st.write("**Revenue & Earnings**")
+        st.write(f"Revenue TTM: {format_number(info.get('totalRevenue'), symbol)}")
+        st.write(f"Revenue/Share: {format_number(info.get('revenuePerShare'), symbol)}")
+        st.write(f"EPS (TTM): {format_number(info.get('trailingEps'), symbol)}")
+        st.write(f"Forward EPS: {format_number(info.get('forwardEps'), symbol)}")
+        st.write(f"Book Value/Share: {format_number(info.get('bookValue'), symbol)}")
 
     # Charts Section (Collapsible)
     with st.expander("📊 Price Analysis", expanded=False):
