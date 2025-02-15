@@ -2,3 +2,4 @@ streamlit==1.42.0
 yfinance==0.2.52
 pandas==2.1.0
 watchdog==3.0.0  # Required for live reload
+plotly
