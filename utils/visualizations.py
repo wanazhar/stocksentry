@@ -3,7 +3,7 @@ from plotly.subplots import make_subplots
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Tuple
-import talib
+import ta
 
 def create_price_chart(df: pd.DataFrame, symbol: str) -> go.Figure:
     """
@@ -96,23 +96,25 @@ def create_technical_chart(df: pd.DataFrame, symbol: str) -> go.Figure:
     """
     Create an advanced technical analysis chart with multiple indicators
     """
-    # Calculate technical indicators
-    df['EMA20'] = talib.EMA(df['Close'], timeperiod=20)
-    df['EMA50'] = talib.EMA(df['Close'], timeperiod=50)
-    df['EMA200'] = talib.EMA(df['Close'], timeperiod=200)
+    # Calculate technical indicators using ta library
+    df['EMA20'] = ta.trend.ema_indicator(df['Close'], window=20)
+    df['EMA50'] = ta.trend.ema_indicator(df['Close'], window=50)
+    df['EMA200'] = ta.trend.ema_indicator(df['Close'], window=200)
     
     # RSI
-    df['RSI'] = talib.RSI(df['Close'], timeperiod=14)
+    df['RSI'] = ta.momentum.rsi(df['Close'], window=14)
     
     # MACD
-    df['MACD'], df['MACD_Signal'], df['MACD_Hist'] = talib.MACD(
-        df['Close'], fastperiod=12, slowperiod=26, signalperiod=9
-    )
+    macd = ta.trend.MACD(df['Close'])
+    df['MACD'] = macd.macd()
+    df['MACD_Signal'] = macd.macd_signal()
+    df['MACD_Hist'] = macd.macd_diff()
     
     # Bollinger Bands
-    df['BB_Upper'], df['BB_Middle'], df['BB_Lower'] = talib.BBANDS(
-        df['Close'], timeperiod=20
-    )
+    bollinger = ta.volatility.BollingerBands(df['Close'])
+    df['BB_Upper'] = bollinger.bollinger_hband()
+    df['BB_Middle'] = bollinger.bollinger_mavg()
+    df['BB_Lower'] = bollinger.bollinger_lband()
     
     # Create subplots
     fig = make_subplots(
@@ -202,8 +204,8 @@ def create_technical_chart(df: pd.DataFrame, symbol: str) -> go.Figure:
     fig.update_layout(
         title=f'{symbol} Technical Analysis',
         template='plotly_dark',
-        height=1000,
         showlegend=True,
+        height=1000,
         xaxis_rangeslider_visible=False
     )
     
@@ -215,19 +217,18 @@ def create_technical_chart(df: pd.DataFrame, symbol: str) -> go.Figure:
     
     return fig
 
-def create_advanced_metrics_chart(info: dict) -> Tuple[go.Figure, Dict]:
+def create_advanced_metrics_chart(info: dict) -> go.Figure:
     """
     Create advanced metrics visualization with scoring system
     """
-    # Calculate composite scores
     scores = calculate_composite_scores(info)
-    
-    # Create radar chart
-    categories = list(scores.keys())
-    values = list(scores.values())
     
     fig = go.Figure()
     
+    categories = list(scores.keys())
+    values = list(scores.values())
+    
+    # Create radar chart
     fig.add_trace(go.Scatterpolar(
         r=values,
         theta=categories,
@@ -243,11 +244,11 @@ def create_advanced_metrics_chart(info: dict) -> Tuple[go.Figure, Dict]:
             )
         ),
         showlegend=False,
-        title="Company Metrics Scorecard",
+        title='Company Performance Metrics',
         template='plotly_dark'
     )
     
-    return fig, scores
+    return fig
 
 def calculate_composite_scores(info: dict) -> Dict[str, float]:
     """
@@ -256,42 +257,57 @@ def calculate_composite_scores(info: dict) -> Dict[str, float]:
     scores = {}
     
     # Valuation Score
-    pe_score = score_metric(info.get('trailingPE', 0), 0, 50, inverse=True)
-    pb_score = score_metric(info.get('priceToBook', 0), 0, 10, inverse=True)
-    peg_score = score_metric(info.get('pegRatio', 0), 0, 3, inverse=True)
-    scores['Valuation'] = (pe_score + pb_score + peg_score) / 3
+    valuation_metrics = {
+        'P/E Ratio': (info.get('trailingPE', 0), 0, 50, True),
+        'Forward P/E': (info.get('forwardPE', 0), 0, 30, True),
+        'PEG Ratio': (info.get('pegRatio', 0), 0, 3, True),
+        'Price/Book': (info.get('priceToBook', 0), 0, 5, True)
+    }
+    
+    scores['Valuation'] = np.mean([
+        score_metric(val, min_val, max_val, inverse)
+        for (val, min_val, max_val, inverse) in valuation_metrics.values()
+        if val is not None and val > 0
+    ])
     
     # Growth Score
-    rev_growth = info.get('revenueGrowth', 0) * 100
-    earnings_growth = info.get('earningsGrowth', 0) * 100
-    scores['Growth'] = (
-        score_metric(rev_growth, -20, 50) +
-        score_metric(earnings_growth, -30, 70)
-    ) / 2
+    growth_metrics = {
+        'Revenue Growth': (info.get('revenueGrowth', 0) * 100, -20, 50, False),
+        'Earnings Growth': (info.get('earningsGrowth', 0) * 100, -30, 100, False)
+    }
+    
+    scores['Growth'] = np.mean([
+        score_metric(val, min_val, max_val, inverse)
+        for (val, min_val, max_val, inverse) in growth_metrics.values()
+        if val is not None
+    ])
     
     # Profitability Score
-    profit_margin = info.get('profitMargins', 0) * 100
-    roe = info.get('returnOnEquity', 0) * 100
-    scores['Profitability'] = (
-        score_metric(profit_margin, 0, 30) +
-        score_metric(roe, 0, 25)
-    ) / 2
+    profitability_metrics = {
+        'Operating Margin': (info.get('operatingMargins', 0) * 100, 0, 40, False),
+        'Profit Margin': (info.get('profitMargins', 0) * 100, 0, 30, False),
+        'ROE': (info.get('returnOnEquity', 0) * 100, 0, 25, False),
+        'ROA': (info.get('returnOnAssets', 0) * 100, 0, 15, False)
+    }
+    
+    scores['Profitability'] = np.mean([
+        score_metric(val, min_val, max_val, inverse)
+        for (val, min_val, max_val, inverse) in profitability_metrics.values()
+        if val is not None
+    ])
     
     # Financial Health Score
-    current_ratio = info.get('currentRatio', 0)
-    debt_to_equity = info.get('debtToEquity', 0)
-    scores['Financial Health'] = (
-        score_metric(current_ratio, 0.5, 3) +
-        score_metric(debt_to_equity, 0, 200, inverse=True)
-    ) / 2
+    health_metrics = {
+        'Current Ratio': (info.get('currentRatio', 0), 0.5, 3, False),
+        'Quick Ratio': (info.get('quickRatio', 0), 0.5, 2, False),
+        'Debt/Equity': (info.get('debtToEquity', 0), 0, 200, True)
+    }
     
-    # Dividend Score
-    dividend_yield = info.get('dividendYield', 0) * 100
-    payout_ratio = info.get('payoutRatio', 0) * 100
-    scores['Dividend'] = (
-        score_metric(dividend_yield, 0, 6) +
-        score_metric(payout_ratio, 0, 75)
-    ) / 2
+    scores['Financial Health'] = np.mean([
+        score_metric(val, min_val, max_val, inverse)
+        for (val, min_val, max_val, inverse) in health_metrics.values()
+        if val is not None and val > 0
+    ])
     
     return scores
 
@@ -299,91 +315,73 @@ def score_metric(value: float, min_val: float, max_val: float, inverse: bool = F
     """
     Convert a metric to a score between 0 and 100
     """
-    if not value or np.isnan(value):
-        return 0
+    if value is None or max_val <= min_val:
+        return 50  # Return neutral score for invalid inputs
     
-    score = (value - min_val) / (max_val - min_val) * 100
-    score = max(0, min(100, score))
+    # Clip value to range
+    value = np.clip(value, min_val, max_val)
     
+    # Calculate score (0-100)
+    score = ((value - min_val) / (max_val - min_val)) * 100
+    
+    # Inverse score if needed (higher raw value = lower score)
     if inverse:
         score = 100 - score
-    
+        
     return score
 
-def create_peer_comparison_chart(peers_data: Dict[str, dict], 
-                               metric: str,
-                               is_percentage: bool = False) -> go.Figure:
+def create_peer_comparison_chart(peers_data: Dict[str, dict], metric: str, is_percentage: bool = False) -> go.Figure:
     """
     Create an advanced peer comparison chart with statistical analysis
     """
+    # Extract metric values
     values = []
-    names = []
+    labels = []
     
     for symbol, data in peers_data.items():
-        val = data.get(metric, 0)
-        if is_percentage:
-            val *= 100
-        values.append(val)
-        names.append(symbol)
+        value = data.get(metric)
+        if value is not None:
+            if is_percentage and not isinstance(value, str):
+                value *= 100
+            values.append(value)
+            labels.append(symbol)
+    
+    if not values:
+        return None
     
     # Calculate statistics
     mean_val = np.mean(values)
     std_val = np.std(values)
+    median_val = np.median(values)
     
-    fig = go.Figure()
+    # Create figure with secondary y-axis
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
     
     # Add bar chart
     fig.add_trace(
         go.Bar(
-            x=names,
+            x=labels,
             y=values,
-            name='Values',
-            text=[f'{v:.2f}' for v in values],
-            textposition='auto',
-        )
+            name=metric,
+            marker_color='rgba(75, 192, 192, 0.7)'
+        ),
+        secondary_y=False
     )
     
-    # Add mean line
-    fig.add_shape(
-        type='line',
-        x0=-0.5,
-        x1=len(names) - 0.5,
-        y0=mean_val,
-        y1=mean_val,
-        line=dict(
-            color='red',
-            width=2,
-            dash='dash'
-        )
-    )
+    # Add mean and standard deviation lines
+    fig.add_hline(y=mean_val, line_dash="dash", line_color="red",
+                 annotation_text=f"Mean: {mean_val:.2f}")
+    fig.add_hline(y=median_val, line_dash="dash", line_color="green",
+                 annotation_text=f"Median: {median_val:.2f}")
     
-    # Add standard deviation bands
-    fig.add_shape(
-        type='rect',
-        x0=-0.5,
-        x1=len(names) - 0.5,
-        y0=mean_val - std_val,
-        y1=mean_val + std_val,
-        fillcolor='rgba(255,0,0,0.1)',
-        line=dict(width=0)
-    )
-    
+    # Update layout
+    title_suffix = " (%)" if is_percentage else ""
     fig.update_layout(
-        title=f'{metric} Comparison',
+        title=f'Peer Comparison: {metric}{title_suffix}',
         template='plotly_dark',
-        height=400,
-        showlegend=False,
-        annotations=[
-            dict(
-                x=len(names)/2,
-                y=mean_val,
-                xanchor='center',
-                yanchor='bottom',
-                text=f'Mean: {mean_val:.2f}',
-                showarrow=False,
-                font=dict(color='red')
-            )
-        ]
+        showlegend=True,
+        xaxis_title="Companies",
+        yaxis_title=f"{metric}{title_suffix}"
     )
     
     return fig

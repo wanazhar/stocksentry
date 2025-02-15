@@ -1,7 +1,7 @@
 [project]
-name = "repl-nix-workspace"
+name = "stocksentry"
 version = "0.1.0"
-description = "Add your description here"
+description = "Advanced stock market analysis and visualization tool with ESG ratings and technical analysis"
 requires-python = ">=3.11"
 dependencies = [
     "openpyxl>=3.1.5",
@@ -12,4 +12,10 @@ dependencies = [
     "twilio>=9.4.4",
     "xlsxwriter>=3.2.2",
     "yfinance>=0.2.52",
+    "numpy>=1.24.0",
+    "ta>=0.10.2",  # Using ta instead of ta-lib as it's more portable
+    "scikit-learn>=1.3.0",
+    "textblob>=0.17.1",
+    "beautifulsoup4>=4.12.0",
+    "requests>=2.31.0"
 ]
