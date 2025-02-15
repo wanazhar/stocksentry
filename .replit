@@ -39,5 +39,5 @@ localPort = 5000
 externalPort = 80
 
 [replit]
-run = "streamlit run main.py"
+run = "streamlit run main.py --server.port $PORT --server.headless true"
 environmentVariables = { "ENVIRONMENT": "production" }
