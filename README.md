@@ -45,6 +45,6 @@ streamlit run main.py
 - [ ] Mobile App Beta (Q3 2025)  
 - [ ] AI-Powered Predictions (Q4 2025)  
 
-📄 [Full Documentation](https://stocksentry.pro/docs) | 💡 [Feature Requests](https://github.com/wanazhar/stocksentry/issues)  
+📄 Full Documentation TBA | 💡 [Feature Requests](https://github.com/wanazhar/stocksentry/issues)  
 
 ---
