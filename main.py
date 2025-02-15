@@ -456,11 +456,11 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-from fastapi import FastAPI
-app = FastAPI()
-@app.get('/health')
-def health_check(): return {'status': 'ok'}
-
 if __name__ == '__main__':
-    import uvicorn
-    uvicorn.run(app, host='0.0.0.0', port=int(os.environ['PORT']))
+    import streamlit.web.cli as stcli
+    import sys
+    
+    sys.argv = ["streamlit", "run", "main.py",
+                "--server.port", str(os.environ.get('PORT', 8080)),
+                "--server.address", "0.0.0.0"]
+    sys.exit(stcli.main())
