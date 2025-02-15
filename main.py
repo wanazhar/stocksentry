@@ -28,481 +28,388 @@ st.set_page_config(
 with open('styles/custom.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-# Sidebar Navigation
-st.sidebar.title('Navigation')
-page = st.sidebar.radio('Go to', ['Stock Analysis', 'Comparison', 'Peer Analysis'])
+# Replace the sidebar navigation with tabs
+st.sidebar.title('StockSentry 🎯')
+tabs = st.tabs(['📊 Analysis', '🔄 Compare', '🏢 Peers'])
 
-if page == 'Stock Analysis':
-    # Title and Description
-    st.title('StockSentry 🎯')
-    st.markdown("""
-    Your comprehensive stock analysis companion. Get real-time insights, detailed metrics, 
-    and advanced visualizations to make informed investment decisions.
-    """)
-
-    # Input Section
-    col1, col2, col3 = st.columns([2, 1, 1])
+with tabs[0]:
+    # Stock Analysis tab content
+    st.title('Stock Analysis 📊')
+    
+    # Make input section more compact
+    col1, col2 = st.columns([3, 1])
     with col1:
-        symbol = st.text_input('Enter Stock Symbol:', value='AAPL', help="""
-        Enter stock symbol (examples):
-        - US stocks: AAPL, GOOGL, MSFT
-        - Hong Kong: 0700.HK, 9988.HK
-        - London: BP.L, HSBA.L
-        - Tokyo: 7203.T, 6758.T
-        - Singapore: D05.SI, Z74.SI
-        """).upper()
-
+        symbol = st.text_input('Stock Symbol:', 
+                             value='AAPL',
+                             placeholder='Enter symbol (e.g., AAPL, GOOGL)')
     with col2:
-        period = st.selectbox(
-            'Select Time Period:',
-            ('1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', 'max')
-        )
+        period = st.selectbox('Period:', 
+                            ['1mo', '3mo', '6mo', '1y', '2y', '5y', 'max'],
+                            index=2)
 
-    with col3:
-        st.write("**Custom Date Range**")
-        use_date_range = st.checkbox("Use Date Range")
+    # Create metric cards for key statistics
+    if symbol:
+        try:
+            info = get_company_info(symbol)
+            
+            # Key metrics in a grid
+            m1, m2, m3, m4 = st.columns(4)
+            with m1:
+                st.metric("Price", 
+                         format_number(info.get('currentPrice'), symbol),
+                         f"{info.get('regularMarketChangePercent', 0):.2f}%")
+            with m2:
+                st.metric("Market Cap", 
+                         format_number(info.get('marketCap'), symbol))
+            with m3:
+                st.metric("P/E Ratio", 
+                         format_number(info.get('trailingPE'), symbol, False))
+            with m4:
+                st.metric("Volume", 
+                         format_number(info.get('volume'), symbol, False))
 
-    # Date Range Selector (shown only if checkbox is selected)
-    if use_date_range:
-        date_col1, date_col2 = st.columns(2)
-        with date_col1:
-            start_date = st.date_input(
-                "Start Date",
-                datetime.date(2010, 1, 1)
-            )
-        with date_col2:
-            end_date = st.date_input(
-                "End Date",
-                datetime.date.today()
-            )
+            # Rest of the analysis content...
+            # (Keep existing analysis sections but reorganize them into tabs)
+            analysis_tabs = st.tabs(['📈 Charts', '📊 Metrics', '💰 Financials'])
+            
+            with analysis_tabs[0]:
+                # Charts section
+                df = get_stock_data(symbol, period)
+                price_chart = create_price_chart(df, symbol)
+                st.plotly_chart(price_chart, use_container_width=True)
+                
+                volume_chart = create_volume_chart(df)
+                st.plotly_chart(volume_chart, use_container_width=True)
 
-        # Bulk Analysis Option
-        st.write("**Bulk Analysis**")
-        additional_symbols = st.text_area(
-            "Enter additional symbols (one per line):",
-            help="Enter multiple stock symbols for bulk analysis"
-        )
+            with analysis_tabs[1]:
+                # Metrics section
+                # (Existing metrics content)
+                metrics_chart = create_metrics_chart(info)
+                st.plotly_chart(metrics_chart, use_container_width=True)
 
-        if st.button("Download Historical Data"):
-            symbols = [symbol] + [s.strip() for s in additional_symbols.split('\n') if s.strip()]
-            historical_data = get_historical_data(symbols, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
+            with analysis_tabs[2]:
+                # Financials section
+                # (Existing financials content)
+                st.subheader("Company Profile")
+                profile_col1, profile_col2 = st.columns([1, 1])
 
-            # Create Excel file with multiple sheets
-            output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                for sym, data in historical_data.items():
-                    data.to_excel(writer, sheet_name=sym[:31])  # Excel sheet names limited to 31 chars
+                with profile_col1:
+                    st.write(f"**Company:** {info['longName']}")
+                    st.write(f"**Sector:** {info.get('sector', 'N/A')}")
+                    st.write(f"**Industry:** {info.get('industry', 'N/A')}")
+                    st.write(f"**Market Cap:** {format_number(info.get('marketCap'), symbol)}")
+                    st.write(f"**Enterprise Value:** {format_number(info.get('enterpriseValue'), symbol)}")
 
-            output.seek(0)
-            st.download_button(
-                label="📥 Download Excel File",
-                data=output,
-                file_name=f"historical_data_{start_date}_{end_date}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+                with profile_col2:
+                    st.write("**Current Trading Info**")
+                    st.write(f"Price: {format_number(info.get('currentPrice'), symbol)}")
+                    st.write(f"Day Range: {format_number(info.get('dayLow'), symbol)} - {format_number(info.get('dayHigh'), symbol)}")
+                    st.write(f"52W Range: {format_number(info.get('fiftyTwoWeekLow'), symbol)} - {format_number(info.get('fiftyTwoWeekHigh'), symbol)}")
+                    st.write(f"Volume: {format_number(info.get('volume'), symbol, False)}")
 
-    try:
-        # Get data based on selected time range
-        if use_date_range:
-            df = get_stock_data(symbol, 'max')
-            df = df[start_date.strftime('%Y-%m-%d'):end_date.strftime('%Y-%m-%d')]
-        else:
-            df = get_stock_data(symbol, period)
+                # Trading Metrics Section
+                st.subheader("Trading Metrics")
+                trading_col1, trading_col2, trading_col3 = st.columns(3)
 
-        info = get_company_info(symbol)
+                with trading_col1:
+                    st.write("**Valuation Metrics**")
+                    st.write(f"P/E Ratio: {format_number(info.get('trailingPE'), symbol, False)}")
+                    st.write(f"Forward P/E: {format_number(info.get('forwardPE'), symbol, False)}")
+                    st.write(f"PEG Ratio: {format_number(info.get('pegRatio'), symbol, False)}")
+                    st.write(f"Price/Book: {format_number(info.get('priceToBook'), symbol, False)}")
+                    st.write(f"EV/EBITDA: {format_number(info.get('enterpriseToEbitda'), symbol, False)}")
+                    st.write(f"EV/Revenue: {format_number(info.get('enterpriseToRevenue'), symbol, False)}")
 
-        # Store charts for export
-        charts = []
+                with trading_col2:
+                    st.write("**Growth & Performance**")
+                    st.write(f"Beta: {format_number(info.get('beta'), symbol, False)}")
+                    st.write(f"Year Change: {format_number(info.get('52WeekChange', 0) * 100, symbol, False)}%")
+                    st.write(f"YTD Return: {format_number(info.get('ytdReturn', 0) * 100, symbol, False)}%")
+                    st.write(f"Revenue Growth: {format_number(info.get('revenueGrowth', 0) * 100, symbol, False)}%")
+                    st.write(f"Earnings Growth: {format_number(info.get('earningsGrowth', 0) * 100, symbol, False)}%")
+                    st.write(f"Profit Margin: {format_number(info.get('profitMargins', 0) * 100, symbol, False)}%")
 
-        # Company Profile Section
-        st.subheader("Company Profile")
-        profile_col1, profile_col2 = st.columns([1, 1])
+                with trading_col3:
+                    st.write("**Income & Returns**")
+                    st.write(f"Dividend Rate: {format_number(info.get('dividendRate', 0), symbol)}")
+                    st.write(f"Dividend Yield: {format_number(info.get('dividendYield', 0) * 100, symbol, False)}%")
+                    st.write(f"ROE: {format_number(info.get('returnOnEquity', 0) * 100, symbol, False)}%")
+                    st.write(f"ROA: {format_number(info.get('returnOnAssets', 0) * 100, symbol, False)}%")
+                    st.write(f"Operating Margin: {format_number(info.get('operatingMargins', 0) * 100, symbol, False)}%")
+                    st.write(f"Gross Margin: {format_number(info.get('grossMargins', 0) * 100, symbol, False)}%")
 
-        with profile_col1:
-            st.write(f"**Company:** {info['longName']}")
-            st.write(f"**Sector:** {info.get('sector', 'N/A')}")
-            st.write(f"**Industry:** {info.get('industry', 'N/A')}")
-            st.write(f"**Market Cap:** {format_number(info.get('marketCap'), symbol)}")
-            st.write(f"**Enterprise Value:** {format_number(info.get('enterpriseValue'), symbol)}")
+                # Financial Health Section
+                st.subheader("Financial Health")
+                health_col1, health_col2 = st.columns(2)
 
-        with profile_col2:
-            st.write("**Current Trading Info**")
-            st.write(f"Price: {format_number(info.get('currentPrice'), symbol)}")
-            st.write(f"Day Range: {format_number(info.get('dayLow'), symbol)} - {format_number(info.get('dayHigh'), symbol)}")
-            st.write(f"52W Range: {format_number(info.get('fiftyTwoWeekLow'), symbol)} - {format_number(info.get('fiftyTwoWeekHigh'), symbol)}")
-            st.write(f"Volume: {format_number(info.get('volume'), symbol, False)}")
+                with health_col1:
+                    st.write("**Balance Sheet Metrics**")
+                    st.write(f"Total Cash: {format_number(info.get('totalCash'), symbol)}")
+                    st.write(f"Total Debt: {format_number(info.get('totalDebt'), symbol)}")
+                    st.write(f"Quick Ratio: {format_number(info.get('quickRatio'), symbol, False)}")
+                    st.write(f"Current Ratio: {format_number(info.get('currentRatio'), symbol, False)}")
+                    st.write(f"Debt/Equity: {format_number(info.get('debtToEquity'), symbol, False)}")
 
-        # Trading Metrics Section
-        st.subheader("Trading Metrics")
-        trading_col1, trading_col2, trading_col3 = st.columns(3)
+                with health_col2:
+                    st.write("**Revenue & Earnings**")
+                    st.write(f"Revenue TTM: {format_number(info.get('totalRevenue'), symbol)}")
+                    st.write(f"Revenue/Share: {format_number(info.get('revenuePerShare'), symbol)}")
+                    st.write(f"EPS (TTM): {format_number(info.get('trailingEps'), symbol)}")
+                    st.write(f"Forward EPS: {format_number(info.get('forwardEps'), symbol)}")
+                    st.write(f"Book Value/Share: {format_number(info.get('bookValue'), symbol)}")
 
-        with trading_col1:
-            st.write("**Valuation Metrics**")
-            st.write(f"P/E Ratio: {format_number(info.get('trailingPE'), symbol, False)}")
-            st.write(f"Forward P/E: {format_number(info.get('forwardPE'), symbol, False)}")
-            st.write(f"PEG Ratio: {format_number(info.get('pegRatio'), symbol, False)}")
-            st.write(f"Price/Book: {format_number(info.get('priceToBook'), symbol, False)}")
-            st.write(f"EV/EBITDA: {format_number(info.get('enterpriseToEbitda'), symbol, False)}")
-            st.write(f"EV/Revenue: {format_number(info.get('enterpriseToRevenue'), symbol, False)}")
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+            st.info("Please check the stock symbol and try again.")
 
-        with trading_col2:
-            st.write("**Growth & Performance**")
-            st.write(f"Beta: {format_number(info.get('beta'), symbol, False)}")
-            st.write(f"Year Change: {format_number(info.get('52WeekChange', 0) * 100, symbol, False)}%")
-            st.write(f"YTD Return: {format_number(info.get('ytdReturn', 0) * 100, symbol, False)}%")
-            st.write(f"Revenue Growth: {format_number(info.get('revenueGrowth', 0) * 100, symbol, False)}%")
-            st.write(f"Earnings Growth: {format_number(info.get('earningsGrowth', 0) * 100, symbol, False)}%")
-            st.write(f"Profit Margin: {format_number(info.get('profitMargins', 0) * 100, symbol, False)}%")
-
-        with trading_col3:
-            st.write("**Income & Returns**")
-            st.write(f"Dividend Rate: {format_number(info.get('dividendRate', 0), symbol)}")
-            st.write(f"Dividend Yield: {format_number(info.get('dividendYield', 0) * 100, symbol, False)}%")
-            st.write(f"ROE: {format_number(info.get('returnOnEquity', 0) * 100, symbol, False)}%")
-            st.write(f"ROA: {format_number(info.get('returnOnAssets', 0) * 100, symbol, False)}%")
-            st.write(f"Operating Margin: {format_number(info.get('operatingMargins', 0) * 100, symbol, False)}%")
-            st.write(f"Gross Margin: {format_number(info.get('grossMargins', 0) * 100, symbol, False)}%")
-
-        # Financial Health Section
-        st.subheader("Financial Health")
-        health_col1, health_col2 = st.columns(2)
-
-        with health_col1:
-            st.write("**Balance Sheet Metrics**")
-            st.write(f"Total Cash: {format_number(info.get('totalCash'), symbol)}")
-            st.write(f"Total Debt: {format_number(info.get('totalDebt'), symbol)}")
-            st.write(f"Quick Ratio: {format_number(info.get('quickRatio'), symbol, False)}")
-            st.write(f"Current Ratio: {format_number(info.get('currentRatio'), symbol, False)}")
-            st.write(f"Debt/Equity: {format_number(info.get('debtToEquity'), symbol, False)}")
-
-        with health_col2:
-            st.write("**Revenue & Earnings**")
-            st.write(f"Revenue TTM: {format_number(info.get('totalRevenue'), symbol)}")
-            st.write(f"Revenue/Share: {format_number(info.get('revenuePerShare'), symbol)}")
-            st.write(f"EPS (TTM): {format_number(info.get('trailingEps'), symbol)}")
-            st.write(f"Forward EPS: {format_number(info.get('forwardEps'), symbol)}")
-            st.write(f"Book Value/Share: {format_number(info.get('bookValue'), symbol)}")
-
-        # Charts Section (Collapsible)
-        with st.expander("📊 Price Analysis", expanded=False):
-            price_chart = create_price_chart(df, symbol)
-            st.plotly_chart(price_chart, use_container_width=True)
-            charts.append(price_chart)
-
-        with st.expander("📈 Volume Analysis", expanded=False):
-            volume_chart = create_volume_chart(df)
-            st.plotly_chart(volume_chart, use_container_width=True)
-            charts.append(volume_chart)
-
-        with st.expander("📉 Financial Metrics", expanded=False):
-            metrics_chart = create_metrics_chart(info)
-            st.plotly_chart(metrics_chart, use_container_width=True)
-            charts.append(metrics_chart)
-
-        # Export Section
-        st.subheader("Export Data")
-        if st.button("Generate Excel Report"):
-            excel_file = export_to_excel(symbol, df, info, charts)
-            st.download_button(
-                label="📥 Download Excel Report",
-                data=excel_file,
-                file_name=f"{symbol}_analysis_report.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
-        st.info("Please check the stock symbol and try again.")
-
-
-elif page == 'Comparison':
+with tabs[1]:  # Comparison Tab
     st.title('Stock Comparison 📊')
-
-    # Input for multiple stocks
-    symbols = st.text_area(
-        'Enter Stock Symbols (one per line):',
-        value='AAPL\nMSFT\nGOOGL',
-        help='Enter up to 5 stock symbols to compare'
-    ).split('\n')
-
-    symbols = [s.strip().upper() for s in symbols if s.strip()][:5]  # Limit to 5 stocks
-
+    
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        symbols_input = st.text_input(
+            'Enter Stock Symbols:',
+            value='AAPL,MSFT,GOOGL',
+            placeholder='Enter symbols separated by commas (e.g., AAPL,MSFT,GOOGL)',
+            help='Compare up to 5 stocks'
+        )
+        symbols = [s.strip().upper() for s in symbols_input.split(',') if s.strip()][:5]
+    
+    with col2:
+        comparison_period = st.selectbox(
+            'Period:',
+            ['1mo', '3mo', '6mo', '1y', '2y', '5y'],
+            index=3
+        )
+    
     if len(symbols) > 1:
         try:
             # Fetch data for all symbols
             data = {}
             info = {}
             for sym in symbols:
-                data[sym] = get_stock_data(sym, '1y')
+                data[sym] = get_stock_data(sym, comparison_period)
                 info[sym] = get_company_info(sym)
-
-            # Create comparison metrics
-            comparison_data = []
-            for sym in symbols:
-                comparison_data.append({
-                    'Symbol': sym,
-                    'Market Cap': format_number(info[sym].get('marketCap'), sym),
-                    'P/E Ratio': format_number(info[sym].get('trailingPE'), sym, False),
-                    'Forward P/E': format_number(info[sym].get('forwardPE'), sym, False),
-                    'PEG Ratio': format_number(info[sym].get('pegRatio'), sym, False),
-                    'Price/Book': format_number(info[sym].get('priceToBook'), sym, False),
-                    'ROE': f"{format_number(info[sym].get('returnOnEquity', 0) * 100, sym, False)}%",
-                    'Dividend Yield': f"{format_number(info[sym].get('dividendYield', 0) * 100, sym, False)}%",
-                })
-
-            comparison_df = pd.DataFrame(comparison_data)
-            st.dataframe(comparison_df)
-
-            # Performance Comparison (Collapsible)
-            with st.expander("📈 Performance Comparison", expanded=False):
-                performance_data = {}
-                base_date = None
-
-                for sym in symbols:
-                    if len(data[sym]) > 0:
-                        if base_date is None:
-                            base_date = data[sym].index[0]
-                        prices = data[sym]['Close']
-                        initial_price = prices.iloc[0]
-                        performance = (prices / initial_price - 1) * 100
-                        performance_data[sym] = performance
-
+            
+            # Create comparison tabs
+            comparison_tabs = st.tabs(['📈 Performance', '📊 Metrics', '💰 Fundamentals'])
+            
+            with comparison_tabs[0]:
+                # Performance comparison chart
                 fig = go.Figure()
                 for sym in symbols:
+                    prices = data[sym]['Close']
+                    normalized_prices = (prices / prices.iloc[0] - 1) * 100
                     fig.add_trace(
                         go.Scatter(
-                            x=performance_data[sym].index,
-                            y=performance_data[sym],
+                            x=normalized_prices.index,
+                            y=normalized_prices,
                             name=sym,
                             mode='lines'
                         )
                     )
-
+                
                 fig.update_layout(
-                    title='Relative Performance Comparison (%)',
-                    yaxis_title='Performance (%)',
-                    template='plotly_dark'
+                    title='Relative Performance (%)',
+                    yaxis_title='Return (%)',
+                    template='plotly_dark',
+                    height=500
                 )
-
                 st.plotly_chart(fig, use_container_width=True)
-
-            # Valuation Metrics Comparison (Collapsible)
-            with st.expander("📊 Valuation Metrics", expanded=False):
+            
+            with comparison_tabs[1]:
+                # Key metrics comparison
                 metrics = {
+                    'Market Cap': 'marketCap',
                     'P/E Ratio': 'trailingPE',
                     'Forward P/E': 'forwardPE',
                     'PEG Ratio': 'pegRatio',
-                    'Price/Book': 'priceToBook',
-                    'EV/EBITDA': 'enterpriseToEbitda'
+                    'Price/Book': 'priceToBook'
                 }
-
+                
                 for metric_name, metric_key in metrics.items():
-                    values = [info[sym].get(metric_key, 0) for sym in symbols]
-                    fig = go.Figure(data=[
-                        go.Bar(
-                            x=symbols,
-                            y=values,
-                            name=metric_name
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        values = [info[sym].get(metric_key, 0) for sym in symbols]
+                        fig = go.Figure(data=[
+                            go.Bar(
+                                x=symbols,
+                                y=values,
+                                text=[format_number(v, sym, metric_key != 'marketCap') for v, sym in zip(values, symbols)],
+                                textposition='auto',
+                            )
+                        ])
+                        fig.update_layout(
+                            title=metric_name,
+                            template='plotly_dark',
+                            height=300,
+                            showlegend=False
                         )
-                    ])
-                    fig.update_layout(
-                        title=f'{metric_name} Comparison',
-                        template='plotly_dark'
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-
-            # Growth Metrics Comparison (Collapsible)
-            with st.expander("📈 Growth Metrics", expanded=False):
-                growth_metrics = {
-                    'Revenue Growth': 'revenueGrowth',
-                    'Earnings Growth': 'earningsGrowth',
-                    'Profit Margin': 'profitMargins'
-                }
-
-                for metric_name, metric_key in growth_metrics.items():
-                    values = [info[sym].get(metric_key, 0) * 100 for sym in symbols]
-                    fig = go.Figure(data=[
-                        go.Bar(
-                            x=symbols,
-                            y=values,
-                            name=metric_name
-                        )
-                    ])
-                    fig.update_layout(
-                        title=f'{metric_name} Comparison (%)',
-                        template='plotly_dark'
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
+                        st.plotly_chart(fig, use_container_width=True)
+            
+            with comparison_tabs[2]:
+                # Fundamental metrics table
+                fundamental_data = []
+                for sym in symbols:
+                    fundamental_data.append({
+                        'Symbol': sym,
+                        'Company': info[sym].get('longName', sym),
+                        'Sector': info[sym].get('sector', 'N/A'),
+                        'Revenue Growth': f"{format_number(info[sym].get('revenueGrowth', 0) * 100, sym, False)}%",
+                        'Profit Margin': f"{format_number(info[sym].get('profitMargins', 0) * 100, sym, False)}%",
+                        'ROE': f"{format_number(info[sym].get('returnOnEquity', 0) * 100, sym, False)}%",
+                        'Dividend Yield': f"{format_number(info[sym].get('dividendYield', 0) * 100, sym, False)}%"
+                    })
+                
+                st.dataframe(
+                    pd.DataFrame(fundamental_data),
+                    use_container_width=True,
+                    height=400
+                )
 
         except Exception as e:
             st.error(f"Error: {str(e)}")
             st.info("Please check the stock symbols and try again.")
-    else:
-        st.info("Please enter at least 2 stock symbols to compare.")
 
-elif page == 'Peer Analysis':
-    st.title('Peer & Industry Analysis 🏢')
-
-    col1, col2 = st.columns([2, 1])
+with tabs[2]:  # Peers Tab
+    st.title('Peer Analysis 🏢')
+    
+    col1, col2 = st.columns([3, 1])
     with col1:
-        symbol = st.text_input('Enter Stock Symbol:', value='AAPL').upper()
-
+        base_symbol = st.text_input(
+            'Enter Stock Symbol:',
+            value='AAPL',
+            placeholder='Enter a stock symbol (e.g., AAPL)'
+        ).upper()
+    
     with col2:
-        include_indexes = st.checkbox('Include Market Indexes', value=True)
-
-    try:
-        info = get_company_info(symbol)
-        peers, peer_data = get_peer_comparison(symbol)
-
-        # Add market indexes if selected
-        if include_indexes:
-            market_indexes = ['SPY', 'QQQ', 'DIA', '^GSPC', '^IXIC', '^DJI']
-            for idx in market_indexes:
-                try:
-                    idx_info = get_company_info(idx)
-                    if idx_info:
-                        peers.append(idx)
-                        peer_data[idx] = idx_info
-                except:
-                    continue
-
-        if peers:
-            st.subheader(f"Industry: {info.get('industry', 'N/A')}")
-            st.subheader(f"Sector: {info.get('sector', 'N/A')}")
-
-            # Create peer comparison metrics
-            peer_metrics = []
-
-            for peer in [symbol] + peers:
-                if peer in peer_data:
-                    peer_metrics.append({
-                        'Company': peer_data[peer].get('longName', peer),
-                        'Market Cap': format_number(peer_data[peer].get('marketCap'), peer),
-                        'P/E Ratio': format_number(peer_data[peer].get('trailingPE'), peer, False),
-                        'Revenue Growth': f"{format_number(peer_data[peer].get('revenueGrowth', 0) * 100, peer, False)}%",
-                        'Profit Margin': f"{format_number(peer_data[peer].get('profitMargins', 0) * 100, peer, False)}%",
-                        'ROE': f"{format_number(peer_data[peer].get('returnOnEquity', 0) * 100, peer, False)}%"
-                    })
-
-            peer_df = pd.DataFrame(peer_metrics)
-            st.dataframe(peer_df)
-
-            # Comparison sections (Collapsible)
-            with st.expander("📊 Performance Analysis", expanded=False):
-                # Get historical data for performance comparison
-                historical_data = {}
-                for peer in [symbol] + peers:
+        include_market = st.checkbox('Include Market Indexes', value=True)
+    
+    if base_symbol:
+        try:
+            base_info = get_company_info(base_symbol)
+            peers, peer_data = get_peer_comparison(base_symbol)
+            
+            if include_market:
+                market_indexes = {
+                    'S&P 500': '^GSPC',
+                    'NASDAQ': '^IXIC',
+                    'Dow Jones': '^DJI'
+                }
+                for name, idx in market_indexes.items():
                     try:
-                        df = get_stock_data(peer, '1y')
-                        if len(df) > 0:
-                            prices = df['Close']
-                            initial_price = prices.iloc[0]
-                            performance = (prices / initial_price - 1) * 100
-                            historical_data[peer] = performance
+                        idx_info = get_company_info(idx)
+                        if idx_info:
+                            peers.append(idx)
+                            peer_data[idx] = idx_info
                     except:
                         continue
-
-                # Plot performance comparison
+            
+            # Industry Overview
+            st.subheader('Industry Overview')
+            st.info(f"**Sector:** {base_info.get('sector', 'N/A')} | **Industry:** {base_info.get('industry', 'N/A')}")
+            
+            # Peer Analysis Tabs
+            peer_tabs = st.tabs(['📊 Performance', '💰 Metrics', '📈 Growth'])
+            
+            with peer_tabs[0]:
+                # Performance comparison
+                df_peers = pd.DataFrame()
+                for peer in [base_symbol] + peers:
+                    try:
+                        prices = get_stock_data(peer, '1y')['Close']
+                        df_peers[peer] = (prices / prices.iloc[0] - 1) * 100
+                    except:
+                        continue
+                
                 fig = go.Figure()
-                for peer, perf in historical_data.items():
+                for col in df_peers.columns:
                     fig.add_trace(
                         go.Scatter(
-                            x=perf.index,
-                            y=perf,
-                            name=peer,
+                            x=df_peers.index,
+                            y=df_peers[col],
+                            name=col,
                             mode='lines'
                         )
                     )
-
+                
                 fig.update_layout(
-                    title='Relative Performance Comparison (%)',
-                    yaxis_title='Performance (%)',
-                    template='plotly_dark'
+                    title='1-Year Performance Comparison (%)',
+                    yaxis_title='Return (%)',
+                    template='plotly_dark',
+                    height=500
                 )
-
                 st.plotly_chart(fig, use_container_width=True)
-
-            # Valuation Metrics Comparison
-            with st.expander("📈 Valuation Metrics", expanded=False):
-                metrics_to_compare = ['trailingPE', 'profitMargins', 'returnOnEquity']
-                labels = ['P/E Ratio', 'Profit Margin', 'ROE']
-
-                for metric, label in zip(metrics_to_compare, labels):
-                    fig = go.Figure()
+            
+            with peer_tabs[1]:
+                # Key metrics comparison
+                metrics = {
+                    'Market Cap': ('marketCap', True),
+                    'P/E Ratio': ('trailingPE', False),
+                    'Profit Margin': ('profitMargins', False),
+                    'ROE': ('returnOnEquity', False)
+                }
+                
+                for metric_name, (metric_key, is_currency) in metrics.items():
                     values = []
                     names = []
-
-                    for peer in [symbol] + peers:
+                    for peer in [base_symbol] + peers:
                         if peer in peer_data:
-                            val = peer_data[peer].get(metric, 0)
-                            if metric in ['profitMargins', 'returnOnEquity']:
+                            val = peer_data[peer].get(metric_key, 0)
+                            if not is_currency:
                                 val *= 100
                             values.append(val)
                             names.append(peer)
-
-                    fig.add_trace(
-                        go.Bar(
-                            x=names,
-                            y=values,
-                            name=label
-                        )
-                    )
-
-                    fig.update_layout(
-                        title=f'{label} Comparison',
-                        template='plotly_dark'
-                    )
-
-                    st.plotly_chart(fig, use_container_width=True)
-
-            # Additional Metrics
-            with st.expander("📉 Additional Metrics", expanded=False):
-                additional_metrics = {
-                    'Market Cap': ('marketCap', True),
-                    'Revenue Growth': ('revenueGrowth', True),
-                    'Forward P/E': ('forwardPE', False),
-                    'PEG Ratio': ('pegRatio', False),
-                    'Price/Book': ('priceToBook', False)
-                }
-
-                for metric_name, (metric_key, is_currency) in additional_metrics.items():
-                    values = []
-                    names = []
-
-                    for peer in [symbol] + peers:
-                        if peer in peer_data:
-                            val = peer_data[peer].get(metric_key, 0)
-                            if is_currency:
-                                val = peer_data[peer].get(metric_key, 0)
-                            values.append(val)
-                            names.append(peer)
-
+                    
                     fig = go.Figure(data=[
                         go.Bar(
                             x=names,
                             y=values,
-                            name=metric_name
+                            text=[format_number(v, peer, not is_currency) for v, peer in zip(values, names)],
+                            textposition='auto',
                         )
                     ])
-
+                    
                     fig.update_layout(
-                        title=f'{metric_name} Comparison',
-                        template='plotly_dark'
+                        title=metric_name,
+                        template='plotly_dark',
+                        height=300,
+                        showlegend=False
                     )
-
                     st.plotly_chart(fig, use_container_width=True)
+            
+            with peer_tabs[2]:
+                # Growth metrics
+                growth_metrics = {
+                    'Revenue Growth': 'revenueGrowth',
+                    'Earnings Growth': 'earningsGrowth',
+                    'Dividend Growth': 'dividendGrowth'
+                }
+                
+                growth_data = []
+                for peer in [base_symbol] + peers:
+                    if peer in peer_data:
+                        growth_data.append({
+                            'Symbol': peer,
+                            'Company': peer_data[peer].get('longName', peer),
+                            **{metric_name: f"{format_number(peer_data[peer].get(metric_key, 0) * 100, peer, False)}%" 
+                               for metric_name, metric_key in growth_metrics.items()}
+                        })
+                
+                st.dataframe(
+                    pd.DataFrame(growth_data),
+                    use_container_width=True,
+                    height=400
+                )
 
-        else:
-            st.info("No peer comparison data available for this stock.")
-
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
-        st.info("Please check the stock symbol and try again.")
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+            st.info("Please check the stock symbol and try again.")
 
 # Footer
 st.markdown("""
 ---
 <div style='text-align: center; color: #666;'>
-    vibecoded by wanazhar on replit
+    Made with ❤️ by wanazhar
 </div>
 """, unsafe_allow_html=True)

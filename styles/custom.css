@@ -1,68 +1,97 @@
-/* Dark theme customization */
+/* Modern theme */
 .stApp {
-    background-color: #0E1117;
+    background-color: #1a1a1a;
+    color: #ffffff;
 }
 
-/* Input styling */
-.stTextInput > div > div > input {
-    background-color: #262730;
-    color: #FAFAFA;
-    border-radius: 5px;
-    padding: 0.5rem;
-}
-
-/* Select boxes */
-.stSelectbox > div > div > select {
-    background-color: #262730;
-    color: #FAFAFA;
-    border-radius: 5px;
-}
-
-/* Expander styling */
+/* Card-like containers */
+.element-container, 
+.st-emotion-cache-1wivap2,
 .streamlit-expanderHeader {
-    background-color: #262730;
-    border-radius: 5px;
-    margin: 0.5rem 0;
+    background-color: #2d2d2d;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-/* Charts container */
-.element-container {
-    background-color: #262730;
-    border-radius: 5px;
-    padding: 1rem;
-    margin: 0.5rem 0;
+.element-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Company profile metrics */
-.st-emotion-cache-1wivap2 {
-    background-color: #262730;
-    border-radius: 5px;
-    padding: 1rem;
-    margin: 0.5rem 0;
+/* Modern inputs */
+.stTextInput > div > div > input,
+.stSelectbox > div > div > select {
+    background-color: #3d3d3d;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-size: 1rem;
 }
 
-/* Smooth transitions */
-* {
-    transition: all 0.3s ease-in-out;
+/* Tabs and navigation */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 1rem;
+    background-color: transparent;
 }
 
-/* Footer styling */
-footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    padding: 1rem;
-    background-color: #0E1117;
+.stTabs [data-baseweb="tab"] {
+    padding: 1rem 2rem;
+    background-color: #2d2d2d;
+    border-radius: 8px;
+}
+
+/* Charts styling */
+.js-plotly-plot {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Metrics and KPIs */
+.stMetric {
+    background-color: #2d2d2d;
+    padding: 1.5rem;
+    border-radius: 12px;
     text-align: center;
 }
 
-/* Mobile responsiveness */
+/* Responsive design */
 @media screen and (max-width: 768px) {
-    .row-widget.stSelectbox {
-        width: 100%;
+    .element-container, 
+    .st-emotion-cache-1wivap2 {
+        padding: 1rem;
+        margin: 0.5rem 0;
     }
 
-    .stPlotlyChart {
-        height: 300px !important;
+    .stTabs [data-baseweb="tab"] {
+        padding: 0.5rem 1rem;
     }
+
+    /* Stack columns on mobile */
+    [data-testid="column"] {
+        width: 100% !important;
+        margin-bottom: 1rem;
+    }
+}
+
+/* Modern scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4d4d4d;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
