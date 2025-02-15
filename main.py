@@ -462,5 +462,7 @@ if __name__ == '__main__':
     
     sys.argv = ["streamlit", "run", "main.py",
                 "--server.port", str(os.environ.get('PORT', 8080)),
-                "--server.address", "0.0.0.0"]
+                "--server.address", "0.0.0.0",
+                "--server.headless", "true",
+                "--server.enableCORS", "false"]
     sys.exit(stcli.main())
