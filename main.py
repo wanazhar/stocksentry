@@ -43,7 +43,7 @@ def main():
 
     # Dynamic port handling
     import os
-    port = int(os.environ.get('PORT', 8080))
+    port = int(os.environ.get('PORT', 8501))
 
     # Replace the sidebar navigation with tabs
     st.sidebar.title('StockSentry Pro 🚀')
