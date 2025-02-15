@@ -1,130 +1,51 @@
-# StockSentry Community
+# StockSentry 📈🚀
 
-[![Run on Replit](https://replit.com/badge/github/wanazhar/stocksentry)]
+[![Run on Replit](https://replit.com/badge/github/wanazhar/stocksentry)](https://replit.com/new/github/wanazhar/stocksentry)
 
-## Features
-- Open source stock analysis
-- Collaborative development
-- No commercial ties
+![Stock Analytics Demo](https://via.placeholder.com/800x400.png?text=Interactive+Stock+Analytics+Demo)
 
-## Institutional Features
-- 50+ Technical Indicators
-- Dark Pool Short Volume Tracking
-- SEC 8K/10Q Filing Analysis
-- Earnings Call Sentiment Scoring
+A friendly open-source stock analysis platform with institutional-grade capabilities. Built by and for the community.
 
-## New in v2.0
-- Ichimoku Cloud technical analysis
-- Mobile-first responsive design
-- Enhanced ESG scoring framework
+## ✨ Features  
+- 📊 **Interactive Analytics**: Live price charts with technical indicators  
+- 🔍 **Fundamental Metrics**: PE ratios, revenue growth, dividend yields  
+- 🌐 **Global Coverage**: All major exchanges supported  
+- 📱 **Mobile-Ready**: Responsive design for any device  
+- 🚀 **One-Click Deploy**: Get started in 30 seconds via Replit  
 
-## Enhanced Features
-- Unified technical/fundamental scoring
-- Institutional-grade risk metrics
-- Mobile-optimized chart rendering
-
-## Mobile Experience
-![Mobile Demo](https://i.imgur.com/mobile-demo.gif)
-- Responsive grid layouts
-- Touch-friendly controls
-- Adaptive chart sizing
-
-## Installation
-
-1. Clone the repository:
+## 🛠️ Installation  
 ```bash
-git clone https://github.com/wanazhar/stocksentry.git
-cd stocksentry
-```
-
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-3. Run the application:
-```bash
+# Clone & run with Streamlit
 streamlit run main.py
 ```
 
-## Deployment
-[![Run on Replit](https://replit.com/badge/github/wanazhar/stocksentry)]
+## 🎯 Core Capabilities  
+| **Technical Analysis**      | **Fundamental Analysis**     | **Visualization**          |
+|------------------------------|------------------------------|----------------------------|
+| 📈 50+ Technical Indicators  | 💰 Valuation Ratios          | 🖥️ Interactive Dashboards  |
+| 🕯️ Candlestick Patterns      | 📉 Financial Health Metrics  | 📊 Dynamic Chart Updates    |
+| 📅 Historical Performance    | 🏦 Dividend Tracking         | 🎨 Custom Theme Support    |
 
-### Local Setup
-```bash
-git clone https://github.com/wanazhar/stocksentry
-cd stocksentry
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate  # Windows
-pip install -r requirements.txt
-streamlit run main.py
+## 🌍 Community First  
+```text
+🤝 Open Collaboration  |  🔓 Transparent Code  |  📚 Public Datasets
 ```
 
-### PythonAnywhere
-1. Upload repo files
-2. Create virtual environment:
-```bash
-mkvirtualenv stocksentry --python=python3.11
-pip install -r requirements.txt
-```
-3. Configure web app entry point:
-```python
-# flask_app.py
-from streamlit.web.cli import main
-if __name__ == '__main__':
-    main()
-```
-4. Set API keys in Dashboard > Environment variables
+## 👥 Contributors Welcome  
+[![Contributor Placeholder](https://via.placeholder.com/100.png?text=You?)](https://github.com/yourprofile)
 
-### Replit Mobile Deployment
-![Replit Demo](https://i.imgur.com/mobile-demo.gif)
+## 🛠️ Tech Stack  
+![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)  
+![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B?logo=streamlit)  
+![yfinance](https://img.shields.io/badge/Data-yfinance-8A2BE2)  
+![Pandas](https://img.shields.io/badge/Analysis-Pandas-150458?logo=pandas)  
+![Plotly](https://img.shields.io/badge/Viz-Plotly-3F4F75?logo=plotly)  
 
-### Production Notes
-- Enable HTTPS in PythonAnywhere dashboard
-- Set `ENVIRONMENT=production` in config
-- Schedule daily DB backups
-- Monitor via PythonAnywhere 'Files' interface
+## 🛣️ Roadmap  
+- [x] Core Analytics Engine  
+- [ ] Mobile App Beta (Q3 2025)  
+- [ ] AI-Powered Predictions (Q4 2025)  
 
-## Usage
+📄 [Full Documentation](https://stocksentry.pro/docs) | 💡 [Feature Requests](https://github.com/wanazhar/stocksentry/issues)  
 
-1. Enter a stock symbol (e.g., AAPL, GOOGL) in the sidebar
-2. Select the desired time period for analysis
-3. View interactive charts and financial metrics
-4. Explore company information and key indicators
-
-## Regulatory Compliance
-- FINRA/SEC compliant
-- GDPR data protection
-- PCI security standards
-
-## Security Standards
-- AES-256 encryption
-- SOC 2 Type II certified
-- Regular penetration testing
-
-## Data Protection
-- End-to-end encryption
-- Annual third-party audits
-- GDPR/CCPA compliant
-
-## Quality Assurance
-## Optimization Checklist
-- [x] Removed 220+ duplicate code lines
-- [x] Verified mobile-responsive layout
-- [x] Consolidated dependency management
-- [x] Added CI/CD-ready requirements
-- [x] Implemented cloud deployment docs
-
-## Technologies Used
-
-- Python 3.11
-- Streamlit
-- Yahoo Finance API
-- Plotly
-- SQLAlchemy
-- Pandas
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+---
