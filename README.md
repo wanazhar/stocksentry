@@ -93,12 +93,6 @@ if __name__ == '__main__':
 3. View interactive charts and financial metrics
 4. Explore company information and key indicators
 
-## Institutional Support
-Contact our Wall Street team: support@stocksentry.pro
-
-## Professional Support
-24/7 institutional support available at support@stocksentry.pro
-
 ## Regulatory Compliance
 - FINRA/SEC compliant
 - GDPR data protection
