@@ -5,10 +5,6 @@ address = "0.0.0.0"
 headless = true
 enableCORS = false
 
-[browser]
-serverAddress = "0.0.0.0"
-serverPort = 8501
-
 [theme]
 base="dark"
 primaryColor="#FF4B4B"
