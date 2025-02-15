@@ -2,7 +2,6 @@
 
 [![Run on Replit](https://replit.com/badge/github/wanazhar/stocksentry)](https://replit.com/new/github/wanazhar/stocksentry)
 
-![Stock Analytics Demo](https://via.placeholder.com/800x400.png?text=Interactive+Stock+Analytics+Demo)
 
 A friendly open-source stock analysis platform with institutional-grade capabilities. Built by and for the community.
 
@@ -32,7 +31,7 @@ streamlit run main.py
 ```
 
 ## 👥 Contributors Welcome  
-[![Contributor Placeholder](https://via.placeholder.com/100.png?text=You?)](https://github.com/yourprofile)
+🤝 TBA
 
 ## 🛠️ Tech Stack  
 ![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)  
