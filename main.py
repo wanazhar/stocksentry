@@ -460,9 +460,11 @@ if __name__ == '__main__':
     import streamlit.web.cli as stcli
     import sys
     
-    sys.argv = ["streamlit", "run", "main.py",
-                "--server.port", str(os.environ.get('PORT', 8080)),
-                "--server.address", "0.0.0.0",
-                "--server.headless", "true",
-                "--server.enableCORS", "false"]
+    sys.argv = ["streamlit", "run", main.py",
+                "--server.port=8501",
+                "--server.address=0.0.0.0",
+                "--server.headless=true",
+                "--server.enableCORS=false",
+                "--browser.serverAddress=0.0.0.0",
+                "--browser.serverPort=8501"]
     sys.exit(stcli.main())
