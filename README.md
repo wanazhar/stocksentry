@@ -84,6 +84,9 @@ if __name__ == '__main__':
 ```
 4. Set API keys in Dashboard > Environment variables
 
+### Replit Mobile Deployment
+![Replit Demo](https://i.imgur.com/mobile-demo.gif)
+
 ### Production Notes
 - Enable HTTPS in PythonAnywhere dashboard
 - Set `ENVIRONMENT=production` in config

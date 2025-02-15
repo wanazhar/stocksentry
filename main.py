@@ -33,6 +33,17 @@ st.set_page_config(
 with open('styles/custom.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
+mobile_css = """
+<style>
+    /* Add mobile styles here */
+</style>
+"""
+st.markdown(mobile_css, unsafe_allow_html=True)
+
+# Dynamic port handling
+import os
+port = int(os.environ.get('PORT', 8080))
+
 # Replace the sidebar navigation with tabs
 st.sidebar.title('StockSentry Pro 🚀')
 tabs = st.tabs(['📊 Analysis', '🔄 Compare', '🏢 Peers'])
