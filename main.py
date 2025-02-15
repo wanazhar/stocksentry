@@ -460,7 +460,7 @@ if __name__ == '__main__':
     import streamlit.web.cli as stcli
     import sys
     
-    sys.argv = ["streamlit", "run", main.py",
+    sys.argv = ["streamlit", "run", "main.py",
                 "--server.port=8501",
                 "--server.address=0.0.0.0",
                 "--server.headless=true",
