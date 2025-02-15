@@ -1,19 +1,11 @@
-# StockSentry Pro
+# StockSentry Community
 
-Advanced stock analysis platform with ESG integration
+[![Run on Replit](https://replit.com/badge/github/wanazhar/stocksentry)]
 
 ## Features
-
-- Real-time stock data from Yahoo Finance
-- Interactive candlestick charts with moving averages
-- Trading volume analysis
-- Key financial metrics visualization
-- Company information dashboard
-- Dark mode UI with responsive design
-- Data caching for improved performance
-- Modern responsive UI
-- Advanced technical indicators
-- Comprehensive ESG scoring
+- Open source stock analysis
+- Collaborative development
+- No commercial ties
 
 ## Institutional Features
 - 50+ Technical Indicators
@@ -56,6 +48,7 @@ streamlit run main.py
 ```
 
 ## Deployment
+[![Run on Replit](https://replit.com/badge/github/wanazhar/stocksentry)]
 
 ### Local Setup
 ```bash

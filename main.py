@@ -458,4 +458,6 @@ def main():
 """, unsafe_allow_html=True)
 
 if __name__ == '__main__':
-    main()
+    import os
+    port = int(os.environ.get('PORT', 8080))
+    st.runtime.websocket.setPort(port)
