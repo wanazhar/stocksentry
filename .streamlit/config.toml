@@ -2,9 +2,13 @@
 [server]
 port = 8501
 address = "0.0.0.0"
-headless = true
+headless = false
 enableCORS = false
+enableXsrfProtection = false
+
+[browser]
+gatherUsageStats = false
 
 [theme]
-base="dark"
-primaryColor="#FF4B4B"
+base = "dark"
+primaryColor = "#FF4B4B"

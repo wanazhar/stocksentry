@@ -457,5 +457,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if __name__ == '__main__':
-    import os
-    os.system("streamlit run main.py --server.port=8501 --server.address=0.0.0.0 --server.headless=true --server.enableCORS=false")
+    import streamlit.web.cli as stcli
+    import sys
+    
+    sys.argv = ["streamlit", "run", __file__, "--server.port=8501", "--server.address=0.0.0.0"]
+    sys.exit(stcli.main())
